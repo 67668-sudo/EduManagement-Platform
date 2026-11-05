@@ -39,7 +39,7 @@ services:
     image: nginx:1.20.2
     container_name: tlias-nginx
     ports:
-      - "90:80"                # 宿主机 90 → 容器 80，访问 http://localhost:90/login
+      - "80:80"                # 宿主机 90 → 容器 80，访问 http://localhost:90/login
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ../frontend/dist:/usr/share/nginx/html   # 前端打包产物
