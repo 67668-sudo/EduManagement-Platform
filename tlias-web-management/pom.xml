@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.example</groupId>
-    <artifactId>tilas-web-managerment</artifactId>
+    <artifactId>tlias-web-management</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>tilas-web-managerment</name>
-    <description>tilas-web-managerment</description>
+    <name>tlias-web-management</name>
+    <description>tlias-web-management</description>
     <url/>
     <licenses>
         <license/>

@@ -20,7 +20,7 @@
 
 | 目录 | 说明 |
 | --- | --- |
-| `tilas-web-managerment/` | 🏫 主项目：部门、员工、班级、学生、报表、文件上传、登录认证、操作日志 |
+| `tlias-web-management/` | 🏫 主项目：部门、员工、班级、学生、报表、文件上传、登录认证、操作日志 |
 | `frontend/` | 🖥️ 前端页面（Vue 3 构建产物），含登录页、业务页与图表 |
 | `aliyun-oss-spring-boot-autoconfigure/` | 📦 自定义 Starter 的自动配置模块 |
 | `aliyun-oss-boot-starter/` | 🎁 自定义 Starter 的门面模块 |
@@ -85,7 +85,7 @@ cd ../aliyun-oss-boot-starter
 mvn clean install -DskipTests
 
 # 3️⃣ 主项目
-cd ../tilas-web-managerment
+cd ../tlias-web-management
 mvn clean package -DskipTests
 ```
 
@@ -93,7 +93,7 @@ mvn clean package -DskipTests
 
 ## 📚 文档导航
 
-- 🏃 主项目的本地运行与部署说明：[`tilas-web-managerment/README.md`](tilas-web-managerment/README.md)
+- 🏃 主项目的本地运行与部署说明：[`tlias-web-management/README.md`](tlias-web-management/README.md)
 - 🧩 自定义 Starter 的使用说明：[`aliyun-oss-boot-starter/README.md`](aliyun-oss-boot-starter/README.md)
 - 🐳 部署配置：[`docker/`](docker/)
 - 🗄️ 数据库脚本：[`sql/tlias.sql`](sql/tlias.sql)

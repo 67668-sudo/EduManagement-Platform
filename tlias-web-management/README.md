@@ -88,10 +88,10 @@ token: <jwt>
 mvn clean package -DskipTests
 ```
 
-产物：`target/tilas-web-managerment-0.0.1-SNAPSHOT.jar`
+产物：`target/tlias-web-management-0.0.1-SNAPSHOT.jar`
 
 ```bash
-java -jar target/tilas-web-managerment-0.0.1-SNAPSHOT.jar
+java -jar target/tlias-web-management-0.0.1-SNAPSHOT.jar
 ```
 
 ## 🐳 三、Docker Compose 部署
@@ -117,17 +117,17 @@ WORKDIR /build
 # 先安装自定义 starter，主项目依赖它
 COPY aliyun-oss-spring-boot-autoconfigure ./aliyun-oss-spring-boot-autoconfigure
 COPY aliyun-oss-boot-starter ./aliyun-oss-boot-starter
-COPY tilas-web-managerment ./tilas-web-managerment
+COPY tlias-web-management ./tlias-web-management
 
 RUN cd aliyun-oss-spring-boot-autoconfigure && mvn -q clean install -DskipTests \
  && cd ../aliyun-oss-boot-starter && mvn -q clean install -DskipTests \
- && cd ../tilas-web-managerment && mvn -q clean package -DskipTests
+ && cd ../tlias-web-management && mvn -q clean package -DskipTests
 
 # ---------- 运行阶段 ----------
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 
-COPY --from=builder /build/tilas-web-managerment/target/*.jar app.jar
+COPY --from=builder /build/tlias-web-management/target/*.jar app.jar
 
 ENV TZ=Asia/Shanghai
 EXPOSE 8080
@@ -199,10 +199,10 @@ docker compose down -v       # 连数据卷一起删除
 
 ```bash
 # 上传 jar 到服务器
-scp target/tilas-web-managerment-0.0.1-SNAPSHOT.jar root@<你的服务器IP>:/opt/app/
+scp target/tlias-web-management-0.0.1-SNAPSHOT.jar root@<你的服务器IP>:/opt/app/
 
 # 服务器上启动
-nohup java -jar /opt/app/tilas-web-managerment-0.0.1-SNAPSHOT.jar \
+nohup java -jar /opt/app/tlias-web-management-0.0.1-SNAPSHOT.jar \
   --spring.datasource.password=<数据库密码> \
   > /opt/app/app.log 2>&1 &
 ```

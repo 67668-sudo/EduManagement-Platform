@@ -10,7 +10,7 @@ services:
       - ../sql:/docker-entrypoint-initdb.d   # 首次启动自动导入建表脚本
       - mysql-data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"              # 宿主机 3307 → 容器 3306，避免和本机 MySQL 的 3306 冲突
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s

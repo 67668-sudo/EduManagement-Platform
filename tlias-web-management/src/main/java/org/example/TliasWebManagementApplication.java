@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TilasWebManagermentApplication {
+public class TliasWebManagementApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TilasWebManagermentApplication.class, args);
+        SpringApplication.run(TliasWebManagementApplication.class, args);
     }
 
 }
