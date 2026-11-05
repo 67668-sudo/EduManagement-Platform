@@ -33,7 +33,7 @@ mysql -u root -p tlias < ../sql/tlias.sql
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/tlias?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    url: jdbc:mysql://localhost:3306/tlias?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8
     username: your_username
     password: your_password
 ```
