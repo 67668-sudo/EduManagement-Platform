@@ -1,0 +1,17 @@
+# IDEA
+.idea/
+*.iml
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# Frontend (如果有)
+node_modules/
+dist/
+
+# System
+.DS_Store

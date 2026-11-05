@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.ClazzMapper">
+    <insert id="add_clazz">
+        insert into clazz (name, room,master_id, begin_date, end_date,update_time, subject)
+        values (#{name}, #{room}, #{masterId}, #{beginDate}, #{endDate}, #{updateTime}, #{subject})
+    </insert>
+    <update id="update_clazz">
+        update clazz set
+                         name = #{name},
+                         room = #{room},
+                         master_id = #{masterId},
+                         begin_date = #{beginDate},
+                         end_date = #{endDate},
+                         update_time = #{updateTime},
+                         subject = #{subject}
+        where id = #{id}
+    </update>
+
+    <select id="selectByQueryParams" resultType="org.example.pojo.Clazz">
+        select c.id, c.name, c.room, c.begin_date, c.end_date, c.master_id, c.create_time, c.update_time, e.name as masterName,
+        (case
+            when current_date between c.begin_date and c.end_date then '已开班'
+            when current_date &lt; c.begin_date then '未开班'
+            when current_date &gt; c.end_date then '已结束'
+            else '未知' end) as status
+            from clazz c left join emp e on c.master_id = e.id
+        <where>
+            <if test="name != null">
+                c.name like CONCAT('%', #{name}, '%')
+            </if>
+            <if test="begin != null">
+                and c.begin_date &gt;= #{begin}
+            </if>
+            <if test="end != null">
+                and c.end_date &lt;= #{end}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.StudentMapper">
+
+
+    <insert id="insert">
+        insert into student (name,gender,no,phone,degree, clazz_id,id_card,is_college,address,graduation_date)
+        values (#{name}, #{gender}, #{no}, #{phone}, #{degree}, #{clazzId}, #{idCard}, #{isCollege}, #{address}, #{graduationDate})
+    </insert>
+    <update id="updateStudent">
+        update student
+        set name = #{name}, gender = #{gender}, no = #{no}, phone = #{phone}, degree = #{degree}, clazz_id = #{clazzId}, id_card = #{idCard}, is_college = #{isCollege}, address = #{address}, graduation_date = #{graduationDate}
+        where id = #{id}
+    </update>
+
+
+    <delete id="deleteByIds">
+        delete from student
+        <foreach item="id" collection="ids" separator="," open="where id in (" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getStudent" resultType="org.example.pojo.Student">
+        select s.*,c.name as clazzName from student as s left join clazz as c on s.clazz_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                s.name like concat('%', #{name}, '%')
+            </if>
+            <if test="degree != null and degree != ''">
+                and s.degree = #{degree}
+            </if>
+            <if test="clazzId != null and clazzId != ''">
+                and s.id = #{clazzId}
+            </if>
+        </where>
+    </select>
+
+    <select id="countStudentDegreeData" resultType="java.util.Map">
+        select (case when degree = 1 then '初中'
+            when degree = 2 then '高中'
+            when degree = 3 then '本科'
+            when degree = 4 then '硕士'
+            when degree = 5 then '博士'
+            else '未知'
+        end) as name
+             , count(*) as value
+        from student
+        group by degree
+    </select>
+
+    <select id="countStudentCountData" resultType="java.util.Map">
+        select c.name, count(*) as value
+        from student as s right join clazz as c on s.clazz_id = c.id
+        group by c.name
+    </select>
+
+</mapper>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.EmpMapper">
+    <update id="updateById">
+        update emp
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="gender != null and gender != 0">
+                gender = #{gender},
+            </if>
+            <if test="phone != null and phone != ''">
+                phone = #{phone},
+            </if>
+            <if test="job != null and job != 0">
+                job = #{job},
+            </if>
+            <if test="salary != null and salary != 0">
+                salary = #{salary},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="entryDate != null">
+                entry_date = #{entryDate},
+            </if>
+            <if test="deptId != null and deptId != 0">
+                dept_id = #{deptId},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="update_lose_job">
+        update emp set job = null
+        where id = #{masterId}
+    </update>
+
+    <delete id="deleteByIds">
+        delete from emp where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+
+    <select id="list" resultType="org.example.pojo.Emp">
+        SELECT e.*, d.name AS deptName
+        FROM emp AS e
+        LEFT OUTER JOIN dept AS d ON e.dept_id = d.id
+        <where>
+            <if test="name != null and name != ''">
+                AND e.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="gender != null and gender != 0">
+                AND e.gender = #{gender}
+            </if>
+            <if test="begin != null and end != null">
+                AND e.entry_date BETWEEN #{begin} AND #{end}
+            </if>
+        </where>
+        ORDER BY e.update_time DESC
+        <!-- 不要写 LIMIT！PageHelper 会帮你搞定！ -->
+    </select>
+
+    <resultMap id="empResultMap" type="org.example.pojo.Emp">
+        <id property="id" column="id"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="gender" column="gender"/>
+        <result property="phone" column="phone"/>
+        <result property="job" column="job"/>
+        <result property="salary" column="salary"/>
+        <result property="image" column="image"/>
+        <result property="deptId" column="dept_id"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+
+        <collection property="exprList" ofType="org.example.pojo.EmpExpr">
+            <id property="id" column="ee_id"/>
+            <result property="empId" column="ee_emp_id"/>
+            <result property="begin" column="ee_begin"/>
+            <result property="end" column="ee_end"/>
+            <result property="company" column="ee_company"/>
+            <result property="job" column="ee_job"/>
+        </collection>
+    </resultMap>
+    <select id="getEmpById" resultMap="empResultMap">
+        select
+            e.*,
+            ee.id as ee_id,
+            ee.emp_id as ee_emp_id,
+            ee.begin as ee_begin,
+            ee.end as ee_end,
+            ee.company as ee_company,
+            ee.job as ee_job
+        from emp as e left join emp_expt as ee on e.id = ee.emp_id
+        where e.id = #{id}
+    </select>
+
+    <select id="countEmpJobData" resultType="java.util.Map">
+        select (case when job = 1 then '帅气的刘哥'
+            when job = 2 then '妓女'
+            when job = 3 then '婊子'
+            when job = 4 then '臭傻逼'
+            else '其他' end) as pos,
+            count(*) as job_count
+        from emp group by job order by job_count desc
+    </select>
+
+    <select id="countEmpGenderData" resultType="java.util.Map">
+        select if(gender = 1, '男', '婊子') as name,
+            count(*) as value
+        from emp group by gender
+    </select>
+    <select id="getEmpList" resultType="org.example.pojo.Emp">
+        select * from emp
+    </select>
+
+</mapper>
