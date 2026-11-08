@@ -21,7 +21,7 @@ public class Log {
         this.operateLogMapper = operateLogMapper;
     }
 
-    @Around("@annotation(org.example.anno.LogOperation)")
+    @Around("@annotation(org.example.anno.LogOperation)")//寻找带这样标签的方法执行环绕
     public Object logOperation(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
 

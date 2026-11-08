@@ -17,7 +17,9 @@ public class TokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String token = request.getHeader("token");
         if (token == null || token.isEmpty()) {
+            log.warn("拦截请求：{} {}", request.getMethod(), request.getRequestURI());
             log.warn("Token is missing");
+            log.warn("拦截请求：{} {}", request.getMethod(), request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
@@ -30,6 +32,7 @@ public class TokenInterceptor implements HandlerInterceptor {
             log.info("Token is valid, 当前操作人ID: {}", empId);
         }catch(Exception e){
             log.warn("Token is invalid");
+            log.warn("拦截请求：{} {}", request.getMethod(), request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }

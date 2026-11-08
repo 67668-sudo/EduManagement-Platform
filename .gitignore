@@ -15,3 +15,9 @@ node_modules/
 
 # System
 .DS_Store
+
+# nginx 运行时文件（保留 conf 和 html 页面，不提交程序本体）
+nginx-1.22.0-web/nginx.exe
+nginx-1.22.0-web/logs/
+nginx-1.22.0-web/docs/
+nginx-1.22.0-web/contrib/

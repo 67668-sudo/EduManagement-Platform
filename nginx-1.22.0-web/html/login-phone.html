@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>验证码登录 · EduManagement</title>
+<link rel="stylesheet" href="/assets/index.63e0c779.css">
+<style>
+  body { margin: 0; }
+  .code-row { display: flex; gap: 10px; align-items: stretch; }
+  .code-row .el-input { flex: 1; }
+  .send-btn {
+    width: 110px; flex-shrink: 0; height: 40px;
+    font-size: 13px; cursor: pointer;
+    color: #409eff; background: #ecf5ff;
+    border: 1px solid #b3d8ff; border-radius: 4px;
+  }
+  .send-btn:hover:not(:disabled) { background: #409eff; color: #fff; border-color: #409eff; }
+  .send-btn:disabled { cursor: not-allowed; color: #a8abb2; background: #f5f7fa; border-color: #e4e7ed; }
+  .tip { min-height: 18px; margin: 0 0 14px; font-size: 12px; text-align: center; line-height: 1.5; }
+  .tip.err { color: #f56c6c; }
+  .tip.ok  { color: #67c23a; }
+  .back-link { display: block; margin-top: 16px; font-size: 13px; text-align: center; color: #409eff; text-decoration: none; cursor: pointer; }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="container" data-v-14d4d0c5>
+      <div class="login-form" data-v-14d4d0c5>
+        <div class="title" data-v-14d4d0c5>tlias智能学习辅助系统</div>
+
+        <form class="el-form" onsubmit="return false;">
+          <div class="el-form-item">
+            <div class="el-input">
+              <div class="el-input__wrapper">
+                <input id="phone" class="el-input__inner" type="tel" maxlength="11"
+                       placeholder="请输入手机号" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="el-form-item">
+            <div class="code-row">
+              <div class="el-input">
+                <div class="el-input__wrapper">
+                  <input id="code" class="el-input__inner" maxlength="6"
+                         placeholder="请输入验证码" autocomplete="off">
+                </div>
+              </div>
+              <button id="sendBtn" class="send-btn" type="button">获取验证码</button>
+            </div>
+          </div>
+
+          <p id="msg" class="tip"></p>
+
+          <button id="loginBtn" class="el-button el-button--primary button" data-v-14d4d0c5 type="button"
+                  style="display:block;margin:0 auto;">登 录</button>
+        </form>
+
+        <a class="back-link" href="/login">使用账号密码登录</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var API_VERIFY = '/api/login/verification';
+  var API_LOGIN  = '/api/login/phone';
+
+  var phoneInput = document.getElementById('phone');
+  var codeInput  = document.getElementById('code');
+  var sendBtn    = document.getElementById('sendBtn');
+  var loginBtn   = document.getElementById('loginBtn');
+  var msgEl      = document.getElementById('msg');
+  var timer      = null;
+
+  function show(text, type) {
+    msgEl.textContent = text || '';
+    msgEl.className = 'tip' + (type ? ' ' + type : '');
+  }
+
+  function post(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (res) { return res.json(); });
+  }
+
+  function validPhone(p) {
+    return /^1[3-9]\d{9}$/.test(p);
+  }
+
+  sendBtn.addEventListener('click', function () {
+    var phone = phoneInput.value.trim();
+    if (!validPhone(phone)) {
+      show('请输入正确的 11 位手机号', 'err');
+      return;
+    }
+
+    sendBtn.disabled = true;
+
+    post(API_VERIFY, { phone: phone })
+      .then(function (res) {
+        if (res.code === 1) {
+          show('验证码已发送，请查看后端控制台日志', 'ok');
+          countdown(60);
+        } else {
+          show(res.msg || '获取验证码失败', 'err');
+          sendBtn.disabled = false;
+        }
+      })
+      .catch(function () {
+        show('网络异常，请稍后重试', 'err');
+        sendBtn.disabled = false;
+      });
+  });
+
+  function countdown(sec) {
+    var left = sec;
+    sendBtn.textContent = left + 's';
+    timer = setInterval(function () {
+      left--;
+      if (left <= 0) {
+        clearInterval(timer);
+        sendBtn.disabled = false;
+        sendBtn.textContent = '重新获取';
+      } else {
+        sendBtn.textContent = left + 's';
+      }
+    }, 1000);
+  }
+
+  loginBtn.addEventListener('click', function () {
+    var phone = phoneInput.value.trim();
+    var code  = codeInput.value.trim();
+
+    if (!validPhone(phone)) { show('请输入正确的 11 位手机号', 'err'); return; }
+    if (!code) { show('请输入验证码', 'err'); return; }
+
+    loginBtn.disabled = true;
+    show('登录中...');
+
+    post(API_LOGIN, { phone: phone, verifyCode: Number(code) })
+      .then(function (res) {
+        if (res.code === 1 && res.data) {
+          show('登录成功', 'ok');
+          // 与原 Vue 应用保持一致：存整个登录信息到 loginUser
+          localStorage.setItem('loginUser', JSON.stringify(res.data));
+          setTimeout(function () { window.location.href = '/'; }, 600);
+        } else {
+          show(res.msg || '登录失败', 'err');
+        }
+      })
+      .catch(function () { show('网络异常，请稍后重试', 'err'); })
+      .finally(function () { loginBtn.disabled = false; });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') loginBtn.click();
+  });
+})();
+</script>
+</body>
+</html>

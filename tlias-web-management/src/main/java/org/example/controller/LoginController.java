@@ -5,7 +5,6 @@ import org.example.pojo.Emp;
 import org.example.pojo.LoginInfo;
 import org.example.pojo.Result;
 import org.example.service.EmpService;
-import org.example.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +15,31 @@ public class LoginController {
     @Autowired
     private EmpService empService;
 
-    @PostMapping
-    public Result login(@RequestBody Emp emp){
+    @PostMapping("/password")
+    public Result loginByPassword(@RequestBody Emp emp){
         log.info("登录：{}",emp);
         LoginInfo loginInfo = empService.login(emp);
         if (loginInfo != null) {
             return Result.success(loginInfo);
         } else {
             return Result.error("用户名或密码错误");
+        }
+    }
+    @PostMapping("/verification")
+    public Result loginByVerification(@RequestBody Emp emp){
+        String verifyCode = empService.sendVerifyCode(emp.getPhone());
+        log.info("验证码已生成：{}", verifyCode);
+        return Result.success();
+    }
+
+    @PostMapping("/phone")
+    public Result loginByPhone(@RequestBody Emp emp){
+        log.info("通过手机号{}登录",emp.getPhone());
+        LoginInfo loginInfo = empService.loginByPhone(emp);
+        if (loginInfo != null) {
+            return Result.success(loginInfo);
+        } else {
+            return Result.error("手机号未注册");
         }
     }
 }

@@ -36,6 +36,7 @@
 | 认证 | 🔐 JWT（jjwt）、HandlerInterceptor、ThreadLocal |
 | 切面 | ✂️ Spring AOP + 自定义注解 |
 | 日志 | 📝 Logback、操作日志落库 |
+| 缓存 | ⚡ Redis（验证码存储，`StringRedisTemplate`） |
 | 组件封装 | 🧩 自定义 Spring Boot Starter（阿里云 OSS） |
 | 前端（演示用） | 🖥️ Vue 3、Vue Router、Pinia、Element Plus、Axios、ECharts、Vite（🤖 AI 辅助生成） |
 | 部署与运维 | 🐧 Linux、🐳 Docker、Docker Compose、Nginx |
@@ -48,7 +49,8 @@
 - 🎓 **学生管理**：分页查询、新增、修改、删除、违纪扣分
 - 📊 **报表统计**：员工职位分布、员工性别分布、班级学生人数（ECharts 图表）
 - ☁️ **文件上传**：上传至阿里云 OSS，返回可访问 URL
-- 🔐 **登录认证**：登录签发 JWT，拦截器校验令牌，`ThreadLocal` 保存当前登录人
+- 🔐 **账号密码登录**：登录签发 JWT，拦截器校验令牌，`ThreadLocal` 保存当前登录人
+- 📱 **验证码登录**：手机号获取验证码（Redis 存 5 分钟），校验通过后签发 JWT
 - 📝 **操作日志**：`@LogOperation` 注解 + AOP 环绕通知，自动记录操作人、类名、方法名、参数、返回值与耗时
 - 🧯 **统一响应与异常**：统一 `Result` 返回体、全局异常处理器、三个自定义业务异常
 
@@ -97,3 +99,31 @@ mvn clean package -DskipTests
 - 🧩 自定义 Starter 的使用说明：[`aliyun-oss-boot-starter/README.md`](aliyun-oss-boot-starter/README.md)
 - 🐳 部署配置：[`docker/`](docker/)
 - 🗄️ 数据库脚本：[`sql/tlias.sql`](sql/tlias.sql)
+
+## 📦 版本记录
+
+### 🎮 v1.0 · 2026-11-05 · 首个完整版本
+
+**✨ 新增**
+
+- 🏫 部门 / 员工 / 班级 / 学生 / 报表统计 / 文件上传 六大业务模块
+- 🔐 JWT 登录认证 + 拦截器 + `ThreadLocal` 保存当前登录人
+- 📝 AOP 操作日志自动落库
+- 🧩 自定义阿里云 OSS Starter（`autoconfigure` + `starter` 双模块）
+- 🐳 Docker Compose 部署（MySQL + 后端 + Nginx）
+- 🖥️ 前端演示页面 + 接口联调
+
+---
+
+### 🎮 v2.0 · 2026-11-08 · 手机验证码登录
+
+**✨ 新增**
+
+- 📱 手机号 + 验证码登录接口：`POST /login/verification`（获取验证码）、`POST /login/phone`（校验并签发 token）
+- ⚡ 引入 Redis 存储验证码：5 分钟过期、校验通过即删除（防重放）
+- 🖥️ 登录页新增「验证码登录」入口，跳转到独立的验证码登录页（复用原样式，布局保持一致）
+
+**🐛 修复**
+
+- 拦截器未放行 `/login/**`，两个登录接口被 401 拦截
+- `String.equals(Integer)` 类型不匹配，验证码永远校验失败

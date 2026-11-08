@@ -34,4 +34,6 @@ public class Emp {
 
     private List<EmpExpr> exprList;
 
+    private String verifyCode;
+
 }

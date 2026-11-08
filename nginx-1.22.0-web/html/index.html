@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" crossorigin src="/assets/index.0ee7a389.js"></script>
+    <link rel="stylesheet" href="/assets/index.63e0c779.css">
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      (function () {
+        var ENTRY_ID = 'smsLoginEntry';
+        var tries = 0;
+
+        var timer = setInterval(function () {
+          tries++;
+
+          var form = document.querySelector('.login-form');
+          if (form && !form.querySelector('#' + ENTRY_ID)) {
+            var btn = document.createElement('button');
+            btn.id = ENTRY_ID;
+            btn.type = 'button';
+            btn.textContent = '验证码登录';
+            btn.style.cssText = 'display:block;width:100%;margin-top:12px;padding:10px 0;' +
+              'font-size:14px;cursor:pointer;color:#409eff;background:#ecf5ff;' +
+              'border:1px solid #b3d8ff;border-radius:4px;';
+
+            btn.onclick = function () {
+              window.location.href = '/login-phone.html';
+            };
+
+            form.appendChild(btn);
+          }
+
+          if (tries > 100) {
+            clearInterval(timer);
+          }
+        }, 100);
+      })();
+    </script>
+  </body>
+</html>
