@@ -14,10 +14,10 @@ import java.util.Map;
 public class JwtUtils {
 
     // 密钥：至少 32 位，正式项目换成随机字符串，别用测试那个
-    private static final String SECRET_KEY = "tlias-secret-key-2024-must-be-long-enough-32";
+    public static final String SECRET_KEY = "tlias-secret-key-2024-must-be-long-enough-32";
 
     // 过期时间：12 小时（单位毫秒）
-    private static final long EXPIRE_TIME = 12 * 60 * 60 * 1000L;
+    static final long EXPIRE_TIME = 12 * 60 * 60 * 1000L;
 
     /**
      * 生成 JWT 令牌

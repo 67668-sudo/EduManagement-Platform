@@ -42,5 +42,43 @@
         }, 100);
       })();
     </script>
+
+    <!-- 监听响应头 newToken，自动把新 token 写回本地，实现无感续期 -->
+    <script>
+      (function () {
+        var XHRProto = XMLHttpRequest.prototype;
+        var originalOpen = XHRProto.open;
+
+        XHRProto.open = function () {
+          var xhr = this;
+
+          xhr.addEventListener('load', function () {
+            var newToken = null;
+            try {
+              newToken = xhr.getResponseHeader('newToken');
+            } catch (e) {
+              /* 跨域且未暴露该头时会抛错，忽略 */
+            }
+
+            if (!newToken) return;
+
+            try {
+              var raw = localStorage.getItem('loginUser');
+              if (!raw) return;
+
+              var info = JSON.parse(raw);
+              info.token = newToken;
+              localStorage.setItem('loginUser', JSON.stringify(info));
+
+              console.log('[TOKEN] 已使用响应头中的 newToken 续期');
+            } catch (e) {
+              console.warn('[TOKEN] 续期写入失败', e);
+            }
+          });
+
+          return originalOpen.apply(this, arguments);
+        };
+      })();
+    </script>
   </body>
 </html>

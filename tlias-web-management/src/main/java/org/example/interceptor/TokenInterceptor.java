@@ -30,7 +30,7 @@ public class TokenInterceptor implements HandlerInterceptor {
         }
 
         try{
-            Claims claims = JwtUtils.parseToken(token);
+            Claims claims = (Claims) request.getAttribute("claims");
             Integer empId = Integer.valueOf(claims.get("id").toString());
             // 1. 进门：存进储物柜
             CurrentHolder.setCurrentId(empId);
