@@ -15,7 +15,8 @@ public class LoginController {
     @Autowired
     private EmpService empService;
 
-    @PostMapping("/password")
+    // 兼容旧前端：原登录页请求 POST /login，新路径是 /login/password
+    @PostMapping({"", "/password"})
     public Result loginByPassword(@RequestBody Emp emp){
         log.info("登录：{}",emp);
         LoginInfo loginInfo = empService.login(emp);

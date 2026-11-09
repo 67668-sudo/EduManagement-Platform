@@ -142,7 +142,7 @@ public class EmpServiceImpl implements EmpService {
                 log.info("验证码错误");
             }
         }else {
-            log.info("用户不存在,请联系刘哥创建用户");
+            log.info("用户不存在：{}", emp.getPhone());
         }
         return null;
     }

@@ -114,17 +114,17 @@
     </select>
 
     <select id="countEmpJobData" resultType="java.util.Map">
-        select (case when job = 1 then '帅气的刘哥'
-            when job = 2 then '妓女'
-            when job = 3 then '婊子'
-            when job = 4 then '臭傻逼'
+        select (case when job = 1 then '班主任'
+            when job = 2 then '讲师'
+            when job = 3 then '学工主管'
+            when job = 4 then '教研主管'
             else '其他' end) as pos,
             count(*) as job_count
         from emp group by job order by job_count desc
     </select>
 
     <select id="countEmpGenderData" resultType="java.util.Map">
-        select if(gender = 1, '男', '婊子') as name,
+        select if(gender = 1, '男', '女') as name,
             count(*) as value
         from emp group by gender
     </select>

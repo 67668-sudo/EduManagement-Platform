@@ -16,10 +16,15 @@ public class TokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String token = request.getHeader("token");
-        if (token == null || token.isEmpty()) {
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+//        System.out.println("requestURI = " + requestURI + ", method = " + method);
+        if((requestURI.equals("/clazzs") && method.equals("GET")) || (requestURI.equals("/emps/list") && method.equals("GET"))){
+            log.info("游客模式观看 clazzs 放行");
+            return true;
+        }else if (token == null || token.isEmpty()) {
             log.warn("拦截请求：{} {}", request.getMethod(), request.getRequestURI());
             log.warn("Token is missing");
-            log.warn("拦截请求：{} {}", request.getMethod(), request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }

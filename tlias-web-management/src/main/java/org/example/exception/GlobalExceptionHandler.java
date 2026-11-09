@@ -12,8 +12,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Result handleException(Exception e){
-        log.error("程序出错了，完蛋了：", e);
-        return Result.error("请联系管理员你刘哥");
+        log.error("系统异常：", e);
+        return Result.error("系统异常，请联系管理员");
     }
     @ExceptionHandler({NotExistEmpException.class, ExistStudentException.class, RepeatNoException.class})
     public Result handleBizException(RuntimeException e) {
@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
 
 //    @ExceptionHandler
 //    public Result handleNotExistEmpException(NotExistEmpException e){
-//        log.error("程序出错了，完蛋了：", e);
+//        log.error("系统异常：", e);
 //        return Result.error(e.getMessage());
 //    }
 

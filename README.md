@@ -36,7 +36,7 @@
 | 认证 | 🔐 JWT（jjwt）、HandlerInterceptor、ThreadLocal |
 | 切面 | ✂️ Spring AOP + 自定义注解 |
 | 日志 | 📝 Logback、操作日志落库 |
-| 缓存 | ⚡ Redis（验证码存储，`StringRedisTemplate`） |
+| 缓存 | ⚡ Redis（验证码存储、班级列表缓存，Jackson 序列化） |
 | 组件封装 | 🧩 自定义 Spring Boot Starter（阿里云 OSS） |
 | 前端（演示用） | 🖥️ Vue 3、Vue Router、Pinia、Element Plus、Axios、ECharts、Vite（🤖 AI 辅助生成） |
 | 部署与运维 | 🐧 Linux、🐳 Docker、Docker Compose、Nginx |
@@ -51,6 +51,7 @@
 - ☁️ **文件上传**：上传至阿里云 OSS，返回可访问 URL
 - 🔐 **账号密码登录**：登录签发 JWT，拦截器校验令牌，`ThreadLocal` 保存当前登录人
 - 📱 **验证码登录**：手机号获取验证码（Redis 存 5 分钟），校验通过后签发 JWT
+- ⚡ **数据缓存**：班级列表查询结果缓存进 Redis，含空值防穿透、写操作自动失效
 - 📝 **操作日志**：`@LogOperation` 注解 + AOP 环绕通知，自动记录操作人、类名、方法名、参数、返回值与耗时
 - 🧯 **统一响应与异常**：统一 `Result` 返回体、全局异常处理器、三个自定义业务异常
 
@@ -127,3 +128,18 @@ mvn clean package -DskipTests
 
 - 拦截器未放行 `/login/**`，两个登录接口被 401 拦截
 - `String.equals(Integer)` 类型不匹配，验证码永远校验失败
+
+---
+
+### 🎮 v2.1 · 2026-11-09 · 班级查询缓存
+
+**✨ 新增**
+
+- ⚡ 班级列表加入 Redis 缓存：先查缓存，未命中再查数据库并回填
+- 🛡️ 缓存穿透防护：查不到数据时写入空值标记（`"empty"`，短过期），避免反复打库
+- 🔄 缓存一致性：新增 / 修改 / 删除班级后清除列表缓存，保证查询能看到最新数据
+- 👀 游客只读模式：班级列表与员工下拉接口免登录可访问（按 `GET` + 路径双重判断）
+
+**🐛 修复**
+
+- 报表统计 SQL 与日志中的不雅文案
