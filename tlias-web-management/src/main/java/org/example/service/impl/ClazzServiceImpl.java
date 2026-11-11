@@ -76,7 +76,7 @@ public class ClazzServiceImpl implements ClazzService {
 //            }
 //
 //            // ---------- ② 缓存没命中，抢锁 ----------
-//            // setIfAbsent = Redis 的 SETNX，同一时刻只有一个人能抢到
+//            // setIfAbsent = Redis 的 SETNX，同一时刻只有一个人能抢到//返回的是包装类可能出现null
 //            // 第三个参数 10 秒 TTL：即使进程崩了，锁也会自动过期，不会永久死锁
 //            Boolean isLock = redisTemplate.opsForValue()
 //                    .setIfAbsent(lockKey, "locked", 10, TimeUnit.SECONDS);
