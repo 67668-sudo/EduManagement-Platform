@@ -10,6 +10,7 @@ import org.example.mapper.ClazzMapper;
 import org.example.mapper.EmpMapper;
 import org.example.mapper.StudentMapper;
 import org.example.pojo.*;
+import org.example.utils.CacheClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.example.service.ClazzService;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,9 +40,6 @@ public class ClazzServiceImpl implements ClazzService {
         this.clazzMapper = clazzMapper;
         this.studentMapper = studentMapper;
     }
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-
 
     //    ==================================================================
 //      【互斥锁版本】—— 留作对比，应对「缓存击穿」
@@ -140,33 +138,37 @@ public class ClazzServiceImpl implements ClazzService {
 //
 //      启用方式：把上面 get_page_query 的 @Override 去掉并改名，
 //                再把下面这段的注释去掉。
+@Autowired
+private CacheClient cacheClient;
+
     @Override
     public PageResult<Clazz> get_page_query(ClazzQueryParam clazzQueryParam) {
         String key = "clazz:list:" + clazzQueryParam.getName() + ":" + clazzQueryParam.getBegin()
                 + ":" + clazzQueryParam.getEnd() + ":" + clazzQueryParam.getPage()
                 + ":" + clazzQueryParam.getPageSize();
 
-        // ① 查缓存
-        Object cache = redisTemplate.opsForValue().get(key);
-        if (cache != null) {
-            if ("empty".equals(cache)) {
-                return new PageResult<>(0L, new ArrayList<>());
-            }
-            return (PageResult<Clazz>) cache;
+        // 调用万能工具类
+        PageResult<Clazz> pageResult = cacheClient.queryWithPassThrough(
+                key,
+                PageResult.class,
+                () -> { // 👈 把具体的查库逻辑用 Lambda 包起来
+                    PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
+                    List<Clazz> clazzList = clazzMapper.selectByQueryParams(clazzQueryParam);
+                    Page<Clazz> p = (Page<Clazz>) clazzList;
+                    return new PageResult<>(p.getTotal(), p.getResult());
+                }
+        );
+
+        // 如果是防穿透命中的 empty，返回空结果
+        if (pageResult == null) {
+            return new PageResult<>(0L, new ArrayList<>());
         }
-
-        // ② 没命中就直接查库 —— 没有任何保护，并发时全部打到这里
-        PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
-        List<Clazz> clazzList = clazzMapper.selectByQueryParams(clazzQueryParam);
-
-        Page<Clazz> p = (Page<Clazz>) clazzList;
-        PageResult<Clazz> pageResult = new PageResult<>(p.getTotal(), p.getResult());
-
-        // ③ 写回缓存
-        redisTemplate.opsForValue().set(key, pageResult, 30, TimeUnit.MINUTES);
         return pageResult;
     }
 
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     @Override
