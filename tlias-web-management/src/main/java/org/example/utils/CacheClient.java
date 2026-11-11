@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -38,11 +40,14 @@ public class CacheClient {
         log.info("未命中缓存，查数据库: {}", cacheKey);
         R result = dbFallback.get();
 
+        long randomSeconds = 300;
+        long ttl = 30 * 60 + ThreadLocalRandom.current().nextInt(300);
+
         // ③ 写回缓存（处理空值防穿透）
         if (result == null) {
             redisTemplate.opsForValue().set(cacheKey, "empty", 5, TimeUnit.MINUTES);
         } else {
-            redisTemplate.opsForValue().set(cacheKey, result, 30, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, result, ttl, TimeUnit.SECONDS);
         }
 
         return result;
