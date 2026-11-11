@@ -42,45 +42,131 @@ public class ClazzServiceImpl implements ClazzService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+
+    //    ==================================================================
+//      【互斥锁版本】—— 留作对比，应对「缓存击穿」
+//    ==================================================================
+//
+//      触发场景：热点 key 刚过期的那一瞬间，大量并发请求同时进来。
+//      因为没有锁，所有请求都会各自去查数据库 —— 这就是缓存击穿。
+//
+//
+//    @Override
+//    public PageResult<Clazz> get_page_query(ClazzQueryParam clazzQueryParam) throws InterruptedException {
+//        // ========== 缓存 key：所有影响结果的参数都要进 key ==========
+//        String key = "clazz:list:" + clazzQueryParam.getName() + ":" + clazzQueryParam.getBegin()
+//                + ":" + clazzQueryParam.getEnd() + ":" + clazzQueryParam.getPage()
+//                + ":" + clazzQueryParam.getPageSize();
+//
+//        // ========== 互斥锁 key：每个缓存 key 一把锁，不同条件互不影响 ==========
+//        String lockKey = "lock:clazz:" + key;
+//
+//        int retryCount = 0;
+//        int maxRetries = 3;   // 最多重试 3 次；建议改成 10~20（500ms~1s），3 次只有 150ms 偏短
+//
+//        while (retryCount < maxRetries) {
+//
+//            // ---------- ① 先查缓存 ----------
+//            // 绝大多数请求在这里就返回了，根本走不到加锁那一步
+//            Object cache = redisTemplate.opsForValue().get(key);
+//            if (cache != null) {
+//                if ("empty".equals(cache)) {
+//                    // 空值标记：数据库里确实没有，直接返回空，不再打库（防穿透）
+//                    return new PageResult<>(0L, new ArrayList<>());
+//                }
+//                return (PageResult<Clazz>) cache;
+//            }
+//
+//            // ---------- ② 缓存没命中，抢锁 ----------
+//            // setIfAbsent = Redis 的 SETNX，同一时刻只有一个人能抢到
+//            // 第三个参数 10 秒 TTL：即使进程崩了，锁也会自动过期，不会永久死锁
+//            Boolean isLock = redisTemplate.opsForValue()
+//                    .setIfAbsent(lockKey, "locked", 10, TimeUnit.SECONDS);
+//
+//            if (Boolean.TRUE.equals(isLock)) {
+//                // 抢到了，说明由我负责"查库 + 写缓存"这一件事
+//                try {
+//                    // ---------- ③ 双重检查 ----------
+//                    // 抢锁这几毫秒里，前一个持有锁的人可能刚把缓存写好
+//                    // 不再确认一次的话，就会重复查库，缓存白写
+//                    cache = redisTemplate.opsForValue().get(key);
+//                    if (cache != null) {
+//                        if ("empty".equals(cache)) {
+//                            return new PageResult<>(0L, new ArrayList<>());
+//                        }
+//                        return (PageResult<Clazz>) cache;
+//                    }
+//
+//                    // ---------- ④ 查数据库并回填缓存 ----------
+//                    log.info("抢锁成功，查询数据库：{}", key);
+//                    PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
+//                    List<Clazz> clazzList = clazzMapper.selectByQueryParams(clazzQueryParam);
+//
+//                    Page<Clazz> p = (Page<Clazz>) clazzList;
+//                    PageResult<Clazz> pageResult = new PageResult<>(p.getTotal(), p.getResult());
+//                    redisTemplate.opsForValue().set(key, pageResult, 30, TimeUnit.MINUTES);
+//                    return pageResult;
+//
+//                } finally {
+//                    // ---------- ⑤ 一定要释放锁 ----------
+//                    // 放在 finally 里：查库抛异常时也能释放，否则只能等 10 秒 TTL 过期
+//                    redisTemplate.delete(lockKey);
+//                }
+//            }
+//
+//            // ---------- ⑥ 没抢到锁：等 50ms 再来一次 ----------
+//            // 注意等的是"缓存被别人写好"，不是"锁被放开"
+//            // 下一次循环开头会先查缓存，命中就直接返回
+//            log.info("没抢到锁，等待 50ms 后重试，当前第 {} 次", retryCount + 1);
+//            Thread.sleep(50);
+//            retryCount++;
+//        }
+//
+//        // ---------- ⑦ 兜底：宁可报错，也不放行打数据库 ----------
+//        // 如果这里改成"降级查库"，互斥锁就失去意义了——
+//        // 因为没抢到锁的请求会全部涌入数据库，等于没加锁
+//        log.error("获取锁重试次数耗尽，系统繁忙：{}", key);
+//        throw new RuntimeException("当前访问人数过多，请稍后再试！");
+//    }
+//
+
+
+//    ==================================================================
+//      【无互斥锁版本】—— 留作对比，会引发「缓存击穿」
+//    ==================================================================
+//
+//      触发场景：热点 key 刚过期的那一瞬间，大量并发请求同时进来。
+//      因为没有锁，所有请求都会各自去查数据库 —— 这就是缓存击穿。
+//
+//      启用方式：把上面 get_page_query 的 @Override 去掉并改名，
+//                再把下面这段的注释去掉。
     @Override
     public PageResult<Clazz> get_page_query(ClazzQueryParam clazzQueryParam) {
-        PageResult<Clazz> pageResult = null;
-        String key = "clazz:list:"
-                + clazzQueryParam.getName() + ":"
-                + clazzQueryParam.getBegin() + ":"
-                + clazzQueryParam.getEnd() + ":"
-                + clazzQueryParam.getPage() + ":"
-                + clazzQueryParam.getPageSize();
+        String key = "clazz:list:" + clazzQueryParam.getName() + ":" + clazzQueryParam.getBegin()
+                + ":" + clazzQueryParam.getEnd() + ":" + clazzQueryParam.getPage()
+                + ":" + clazzQueryParam.getPageSize();
 
-        if (redisTemplate.hasKey(key)) {
-            log.info("命中缓存{}", key);
-            Object cache = redisTemplate.opsForValue().get(key);
-
-            if("empty".equals(cache)){
-                log.info("缓存为空{},刷新空值", key);
-                redisTemplate.opsForValue().set(key, "empty", 10, TimeUnit.MINUTES);
-                return new PageResult<Clazz>(0, new ArrayList<Clazz>());
-            }else{
-                pageResult = (PageResult<Clazz>) cache;
-                return pageResult;
+        // ① 查缓存
+        Object cache = redisTemplate.opsForValue().get(key);
+        if (cache != null) {
+            if ("empty".equals(cache)) {
+                return new PageResult<>(0L, new ArrayList<>());
             }
-        }else{
-            log.info("未命中缓存，查询数据库{}", key);
-            PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
-            List<Clazz> clazzList = clazzMapper.selectByQueryParams(clazzQueryParam);
-            if (clazzList.isEmpty()) {
-                redisTemplate.opsForValue().set(key, "empty", 5, TimeUnit.MINUTES);
-                log.info("出现缓存穿透{}，增添缓存空值", key);
-                return new PageResult<Clazz>(0, new ArrayList<Clazz>());
-            }else{
-                log.info("数据库命中{}，返回数据", key);
-                Page<Clazz> p = (Page<Clazz>) clazzList;
-                pageResult = new PageResult<Clazz>(p.getTotal(),p.getResult());
-                redisTemplate.opsForValue().set(key, pageResult,2,TimeUnit.MINUTES);
-                return pageResult;
-            }
+            return (PageResult<Clazz>) cache;
         }
+
+        // ② 没命中就直接查库 —— 没有任何保护，并发时全部打到这里
+        PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
+        List<Clazz> clazzList = clazzMapper.selectByQueryParams(clazzQueryParam);
+
+        Page<Clazz> p = (Page<Clazz>) clazzList;
+        PageResult<Clazz> pageResult = new PageResult<>(p.getTotal(), p.getResult());
+
+        // ③ 写回缓存
+        redisTemplate.opsForValue().set(key, pageResult, 30, TimeUnit.MINUTES);
+        return pageResult;
     }
+
 
     @Transactional
     @Override

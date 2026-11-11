@@ -23,7 +23,7 @@ public class ClazzController {
     }
 
     @GetMapping
-    public Result page_query(ClazzQueryParam clazzQueryParam){
+    public Result page_query(ClazzQueryParam clazzQueryParam) throws InterruptedException {
         log.info("分页查询{}",clazzQueryParam);
         PageResult<Clazz> clazz = clazzService.get_page_query(clazzQueryParam);
         return Result.success(clazz);

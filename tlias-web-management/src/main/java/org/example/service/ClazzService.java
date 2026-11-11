@@ -7,7 +7,7 @@ import org.example.pojo.PageResult;
 import java.util.List;
 
 public interface ClazzService {
-    PageResult<Clazz> get_page_query(ClazzQueryParam clazzQueryParam);
+    PageResult<Clazz> get_page_query(ClazzQueryParam clazzQueryParam) throws InterruptedException;
 
     void Delete_calzz(Integer id);
 
