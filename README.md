@@ -191,7 +191,7 @@ mvn clean package -DskipTests
 
 ---
 
-### 🎮 v4.1 · 2026-11-12 · WebSocket 违纪通知
+### 🎮 v5 · 2026-11-12 · WebSocket 违纪通知
 
 **✨ 新增**
 
