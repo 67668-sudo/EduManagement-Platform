@@ -2,14 +2,15 @@ package org.example.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.example.WebSocket.DisciplinaryNoticeWebSocket;
 import org.example.exception.RepeatNoException;
 import org.example.mapper.StudentMapper;
-import org.example.pojo.PageResult;
-import org.example.pojo.Student;
-import org.example.pojo.StudentQueryParam;
+import org.example.pojo.*;
 import org.example.service.StudentService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -54,9 +55,27 @@ public class StudentServiceImpl implements StudentService {
         studentMapper.updateStudent(student);
     }
 
+    @Transactional
     @Override
     public void updateStudentViolation(Integer id, Integer score) {
         studentMapper.updateStudentViolation(id, score);
+        Student student = studentMapper.selectStudentById(id);
+        Emp emp = studentMapper.selectEmpById(student.getClazzId());
+        ViolationAlert violationAlert = new ViolationAlert();
+        violationAlert.setStudentId(student.getId());
+        violationAlert.setStudentName(student.getName());
+        violationAlert.setMasterId(emp.getId());
+        violationAlert.setViolationScore(score);
+        violationAlert.setIsRead(0);
+        violationAlert.setCreateTime(LocalDateTime.now());
+        DisciplinaryNoticeWebSocket.sendMessage(student.getName()
+                + "同学在"
+                + violationAlert.getCreateTime()
+                + "违纪扣除"
+                + violationAlert.getViolationScore()
+                + "分"
+                + "请及时教导处理"
+                ,violationAlert);
     }
 
 

@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.example.pojo.Emp;
 import org.example.pojo.Student;
 import org.example.pojo.StudentQueryParam;
 
@@ -39,4 +40,7 @@ public interface StudentMapper {
     List<Map<String, Object>> countStudentDegreeData();
 
     List<Map<String, Object>> countStudentCountData();
+
+    @Select("SELECT e.* FROM emp e JOIN clazz c ON e.id = c.master_id WHERE c.id = #{clazzId}")
+    Emp selectEmpById(Integer clazzId);
 }

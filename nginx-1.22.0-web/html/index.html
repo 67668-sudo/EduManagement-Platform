@@ -80,5 +80,98 @@
         };
       })();
     </script>
+
+    <!-- 违纪通知 WebSocket：登录后自动连接，收到消息弹出右下角提示 -->
+    <script>
+      (function () {
+        var RECONNECT_DELAY = 5000;
+        var ws = null;
+        var currentId = null;
+
+        function getEmpId() {
+          try {
+            var raw = localStorage.getItem('loginUser');
+            if (!raw) return null;
+            var info = JSON.parse(raw);
+            return info && info.id ? info.id : null;
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function toast(text) {
+          var box = document.getElementById('__ws_toast_box');
+          if (!box) {
+            box = document.createElement('div');
+            box.id = '__ws_toast_box';
+            box.style.cssText = 'position:fixed;top:24px;right:24px;z-index:999999;' +
+              'display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+            document.body.appendChild(box);
+          }
+
+          var item = document.createElement('div');
+          item.textContent = text;
+          item.style.cssText = 'max-width:360px;padding:14px 18px;' +
+            'background:linear-gradient(to right,#007fa4,#00aaa0);color:#fff;' +
+            'font-size:14px;line-height:1.6;border-radius:8px;' +
+            'box-shadow:0 6px 20px rgba(0,0,0,.25);' +
+            'opacity:0;transform:translateX(20px);' +
+            'transition:opacity .3s,transform .3s;';
+
+          box.appendChild(item);
+          requestAnimationFrame(function () {
+            item.style.opacity = '1';
+            item.style.transform = 'translateX(0)';
+          });
+
+          setTimeout(function () {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(20px)';
+            setTimeout(function () { item.remove(); }, 300);
+          }, 8000);
+        }
+
+        function connect(id) {
+          if (ws) {
+            try { ws.close(); } catch (e) {}
+          }
+          currentId = id;
+
+          var url = 'ws://' + location.hostname + ':8080/disciplinaryNotice/' + id;
+          console.log('[WS] 连接中：' + url);
+
+          ws = new WebSocket(url);
+
+          ws.onopen = function () {
+            console.log('[WS] 已连接，用户 id=' + id);
+          };
+
+          ws.onmessage = function (e) {
+            console.log('[WS] 收到通知：' + e.data);
+            toast(e.data);
+          };
+
+          ws.onclose = function () {
+            console.log('[WS] 连接断开，' + (RECONNECT_DELAY / 1000) + ' 秒后重连');
+            setTimeout(function () {
+              if (getEmpId() === currentId) connect(currentId);
+            }, RECONNECT_DELAY);
+          };
+
+          ws.onerror = function () {};
+        }
+
+        // 每 2 秒检查一次：登录了就连接，id 变了就重连
+        setInterval(function () {
+          var id = getEmpId();
+          if (!id) return;
+          if (currentId === id && ws &&
+              (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+            return;
+          }
+          connect(id);
+        }, 2000);
+      })();
+    </script>
   </body>
 </html>
