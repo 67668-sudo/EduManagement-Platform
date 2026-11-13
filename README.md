@@ -212,4 +212,22 @@ mvn clean package -DskipTests
 - 设计目标：解决「老师不知道学生违纪」的问题，而非单纯做在线推送
 - 在线 + 离线两条路径覆盖了实际使用场景：下课没人盯着屏幕，消息也不能丢
 
+---
+
+### 🎮 v5.1 · 2026-11-13 · WebSocket 安全加固
+
+**🔒 安全**
+
+- 🔐 WebSocket 握手阶段校验 JWT：拒绝空 token、过期、伪造的连接
+- 🚫 **防身份冒充**：校验 URL 中的 id 与 token 内的 id 是否一致，拦截水平越权
+- 🧯 异常分类处理：`NoTokenException` 单独提示，其余 JWT 异常统一兜底并记录日志
+- 🔗 路径参数由 `{id},{token}` 调整为 `{id}/{token}`（JSR-356 路径变量只支持 `/` 分隔）
+- 🖥️ 前端连接时自动携带 token，无 token 时不发起连接
+
+**📝 说明**
+
+- 背景：`@ServerEndpoint` 不经过 Spring MVC 的 `HandlerInterceptor`，HTTP 层的登录校验对 WebSocket 完全无效
+- 风险类型：属于 OWASP API 安全风险中的「对象级授权失效」（BOLA / IDOR）
+- 验证方式：用自己的合法 token 连接他人 id，会被立即拒绝并记录告警日志
+
 

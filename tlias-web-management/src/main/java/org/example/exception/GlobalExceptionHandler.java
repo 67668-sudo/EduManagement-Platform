@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
         log.error("系统异常：", e);
         return Result.error("系统异常，请联系管理员");
     }
-    @ExceptionHandler({NotExistEmpException.class, ExistStudentException.class, RepeatNoException.class})
+    @ExceptionHandler({NotExistEmpException.class, ExistStudentException.class, RepeatNoException.class, NoTokenException.class})
     public Result handleBizException(RuntimeException e) {
         return Result.error(e.getMessage());
     }

@@ -99,6 +99,17 @@
           }
         }
 
+        function getToken() {
+          try {
+            var raw = localStorage.getItem('loginUser');
+            if (!raw) return null;
+            var info = JSON.parse(raw);
+            return info && info.token ? info.token : null;
+          } catch (e) {
+            return null;
+          }
+        }
+
         function toast(text) {
           var box = document.getElementById('__ws_toast_box');
           if (!box) {
@@ -132,13 +143,21 @@
         }
 
         function connect(id) {
+          var token = getToken();
+          if (!token) {
+            console.log('[WS] 没有 token，跳过连接');
+            return;
+          }
+
           if (ws) {
             try { ws.close(); } catch (e) {}
           }
           currentId = id;
 
-          var url = 'ws://' + location.hostname + ':8080/disciplinaryNotice/' + id;
-          console.log('[WS] 连接中：' + url);
+          // 后端端点是 /disciplinaryNotice/{id}/{token}
+          var url = 'ws://' + location.hostname + ':8080/disciplinaryNotice/'
+            + id + '/' + token;
+          console.log('[WS] 连接中：' + url.substring(0, 60) + '...');
 
           ws = new WebSocket(url);
 

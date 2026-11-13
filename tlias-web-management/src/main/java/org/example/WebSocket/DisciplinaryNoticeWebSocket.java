@@ -1,5 +1,6 @@
 package org.example.WebSocket;
 
+import io.jsonwebtoken.Claims;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -7,18 +8,21 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
+import org.example.exception.NoTokenException;
 import org.example.mapper.ViolationAlertMapper;
 import org.example.pojo.Student;
 import org.example.pojo.ViolationAlert;
+import org.example.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@ServerEndpoint("/disciplinaryNotice/{id}")
+@ServerEndpoint("/disciplinaryNotice/{id}/{token}")
 @Component
 public class DisciplinaryNoticeWebSocket {
     private static final ConcurrentHashMap<String, Session> map = new ConcurrentHashMap<>();
@@ -30,7 +34,35 @@ public class DisciplinaryNoticeWebSocket {
     }
 
     @OnOpen
-    public void onOpen(@PathParam("id") Integer id, Session session) {
+    public void onOpen(@PathParam("id") Integer id, @PathParam("token") String token, Session session) {
+        try {
+            if(token == null || token.isEmpty()){
+                log.info("用户{}还未登录，token为空", id);
+                throw new NoTokenException("用户还未登录，token为空");
+            }
+            Claims claims = JwtUtils.parseToken(token);
+            Integer realId = Integer.valueOf(claims.get("id").toString());
+            if (!realId.equals(id)) {
+                log.info("danger!!!!用户{}尝试冒充用户{}登录", id, realId);
+                throw new NoTokenException("用户尝试冒充其他用户登录,请立即停止行为，否则将会报警！");
+            }
+        } catch (NoTokenException e) {
+            log.error("用户{}登录异常: {}", id, e.getMessage());
+            try {
+                session.close();
+            } catch (IOException ex) {
+                log.error("用户对话关闭异常: {}", ex.getMessage());
+            }
+            return;
+        }catch (Exception e) {
+            log.warn("用户{} 的 token 非法或已过期：{}", id, e.getMessage());
+            try {
+                session.close();
+            } catch (IOException ignored) {
+            }
+            return;
+        }
+
         map.put(id.toString(), session);
         log.info("用户{}已连接", id);
 
